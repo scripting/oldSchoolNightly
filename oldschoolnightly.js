@@ -1,4 +1,4 @@
-const myProductName = "Old School Nightly", myVersion = "0.4.6";
+const myProductName = "Old School Nightly", myVersion = "0.4.7";
 
 const utils = require ("daveutils");
 const request = require ("request");
@@ -10,6 +10,8 @@ var config = {
 	basefolder: "data/",
 	basepath: "blog/",
 	type: "text/html",
+	urlRssFile: "http://scripting.com/rss.xml",
+	pathRssFile: "rss.xml",
 	committer: {
 		name: "Dave Winer",
 		email: "dave.winer@gmail.com"
@@ -66,6 +68,45 @@ function getDirectory (folder, callback) {
 			});
 		});
 	}
+
+
+function uploadOneObject (data, repoPath, callback) {
+	var bodyStruct = { 
+		message: config.message,
+		committer: {
+			name: config.committer.name,
+			email: config.committer.email
+			},
+		content: new Buffer (data).toString ('base64')
+		};
+	getGitHubFile (repoPath, function (jstruct) {
+		if (jstruct !== undefined) {
+			bodyStruct.sha = jstruct.sha;
+			}
+		var username = config.username;
+		var url = "https://" + username + ":" + config.password + "@api.github.com/repos/" + username + "/" + config.repo + "/contents/" + repoPath;
+		var theRequest = {
+			method: "PUT",
+			url: url,
+			body: JSON.stringify (bodyStruct),
+			headers: {
+				"User-Agent": config.userAgent,
+				"Content-Type": config.type
+				}
+			};
+		request (theRequest, function (err, response, body) { 
+			if (err) {
+				console.log ("uploadOneFile: f == " + f + ", err.message == " + err.message);
+				}
+			else {
+				console.log ("uploadOneObject: response.statusCode == " + response.statusCode);
+				}
+			if (callback !== undefined) {
+				callback ();
+				}
+			});
+		});
+	}
 function uploadOneFile (f, repoPath, callback) {
 	fs.readFile (f, function (err, data) {
 		if (err) {
@@ -75,41 +116,27 @@ function uploadOneFile (f, repoPath, callback) {
 				}
 			}
 		else {
-			var bodyStruct = { 
-				message: config.message,
-				committer: {
-					name: config.committer.name,
-					email: config.committer.email
-					},
-				content: new Buffer (data).toString ('base64')
-				};
-			getGitHubFile (repoPath, function (jstruct) {
-				if (jstruct !== undefined) {
-					bodyStruct.sha = jstruct.sha;
-					}
-				var username = config.username;
-				var url = "https://" + username + ":" + config.password + "@api.github.com/repos/" + username + "/" + config.repo + "/contents/" + repoPath;
-				var theRequest = {
-					method: "PUT",
-					url: url,
-					body: JSON.stringify (bodyStruct),
-					headers: {
-						"User-Agent": config.userAgent,
-						"Content-Type": config.type
-						}
-					};
-				request (theRequest, function (err, response, body) { 
-					if (err) {
-						console.log ("uploadOneFile: f == " + f + ", err.message == " + err.message);
-						}
-					else {
-						console.log ("uploadOneFile: f == " + f + ", response.statusCode == " + response.statusCode);
-						}
-					if (callback !== undefined) {
-						callback ();
-						}
-					});
-				});
+			uploadOneObject (data, repoPath, callback);
+			}
+		});
+	}
+function uploadHttpFile (url, repoPath, callback) {
+	var theRequest = {
+		method: "GET",
+		url: url,
+		headers: {
+			"User-Agent": config.userAgent
+			}
+		};
+	request (theRequest, function (err, response, body) { 
+		if (err) {
+			console.log ("uploadHttpFile: err.message == " + err.message);
+			if (callback !== undefined) {
+				callback ();
+				}
+			}
+		else {
+			uploadOneObject (body, repoPath, callback);
 			}
 		});
 	}
@@ -139,10 +166,12 @@ function doOneFolder (now, foldername, callback) {
 		});
 	}
 function doUploads () {
-	var yesterday = utils.dateYesterday (new Date ());
-	uploadTodaysFile (yesterday, "pages", ".html", function () {
-		uploadTodaysFile (yesterday, "days", ".json", function () {
-			doOneFolder (yesterday, "items");
+	uploadHttpFile (config.urlRssFile, config.basepath + config.pathRssFile, function () {
+		var yesterday = utils.dateYesterday (new Date ());
+		uploadTodaysFile (yesterday, "pages", ".html", function () {
+			uploadTodaysFile (yesterday, "days", ".json", function () {
+				doOneFolder (yesterday, "items");
+				});
 			});
 		});
 	}
@@ -161,6 +190,9 @@ function everyMinute () {
 	console.log ("\n" + myProductName + " v" + myVersion + ": " + now.toLocaleTimeString ());
 	checkForUpload ();
 	}
+function runTestCode () {
+	doUploads ();
+	}
 
 console.log ("\n" + myProductName + " v" + myVersion + ".");
 fs.readFile (fnameStats, function (err, data) {
@@ -176,6 +208,7 @@ fs.readFile (fnameStats, function (err, data) {
 			config [x] = jstruct [x];
 			}
 		checkForUpload (); //check immediately at startup
+		runTestCode (); //comment out to deploy for real -- 7/12/18 by DW
 		utils.runAtTopOfMinute (function () {
 			setInterval (everyMinute, 60000); 
 			everyMinute ();
