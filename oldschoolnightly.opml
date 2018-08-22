@@ -11,11 +11,23 @@
 		<windowRight>1500</windowRight>
 		</head>
 	<body text="oldschoolnightly.js">
-		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.4.7&quot;;"></outline>
+		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.1&quot;;"></outline>
 		<outline text=""></outline>
-		<outline text="const utils = require (&quot;daveutils&quot;);"></outline>
-		<outline text="const request = require (&quot;request&quot;);"></outline>
+		<outline isComment="true" text="Notes">
+			<outline text="8/22/18; 4:16:55 PM by DW">
+				<outline text="Rewrite. Use davegithub. Also uploads misc files. ">
+					<outline text="Used to be done in Frontier in a separate process from my desktop. ">
+						<outline text="nodeEditorSuite.utilities.nightlyGithubUpload"></outline>
+						</outline>
+					<outline text="Now the functionality is built in here."></outline>
+					</outline>
+				</outline>
+			</outline>
+		<outline text=""></outline>
 		<outline text="const fs = require (&quot;fs&quot;);"></outline>
+		<outline text="const utils = require (&quot;daveutils&quot;);"></outline>
+		<outline text="const request = require (&quot;request&quot;); "></outline>
+		<outline text="const davegithub = require (&quot;davegithub&quot;); "></outline>
 		<outline text=""></outline>
 		<outline text="var config = {">
 			<outline text="username: &quot;scripting&quot;,"></outline>
@@ -26,6 +38,29 @@
 			<outline text="type: &quot;text/html&quot;,"></outline>
 			<outline text="urlRssFile: &quot;http://scripting.com/rss.xml&quot;,"></outline>
 			<outline text="pathRssFile: &quot;rss.xml&quot;,"></outline>
+			<outline text=""></outline>
+			<outline text="miscFiles: [ //8/21/18 by DW">
+				<outline text="{">
+					<outline text="url: &quot;http://scripting.com/rss.xml&quot;,"></outline>
+					<outline text="path: &quot;blog/rss.xml&quot;,"></outline>
+					<outline text="type: &quot;text/xml&quot;"></outline>
+					<outline text="},"></outline>
+					</outline>
+				<outline text="{">
+					<outline text="url: &quot;http://electricserver.scripting.com/users/davewiner/electric/glossary.opml&quot;,"></outline>
+					<outline text="path: &quot;blog/misc/glossary.opml&quot;,"></outline>
+					<outline text="type: &quot;text/xml&quot;"></outline>
+					<outline text="},"></outline>
+					</outline>
+				<outline text="{">
+					<outline text="url: &quot;http://podcatch.com/users/davewiner/podcasts.opml&quot;,"></outline>
+					<outline text="path: &quot;podcatch/subscriptions.opml&quot;,"></outline>
+					<outline text="type: &quot;text/xml&quot;"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="],"></outline>
+				</outline>
+			<outline text=""></outline>
 			<outline text="committer: {">
 				<outline text="name: &quot;Dave Winer&quot;,"></outline>
 				<outline text="email: &quot;dave.winer@gmail.com&quot;"></outline>
@@ -39,45 +74,9 @@
 			<outline text="whenLastUpdate: new Date (0)"></outline>
 			<outline text="};"></outline>
 			</outline>
+		<outline text=""></outline>
 		<outline text="const fnameStats = &quot;stats.json&quot;, fnameConfig = &quot;config.json&quot;;"></outline>
 		<outline text=""></outline>
-		<outline text="function getGitHubFile (repoPath, callback) {">
-			<outline text="var url = &quot;https://&quot; + config.username + &quot;:&quot; + config.password + &quot;@api.github.com/repos/&quot; + config.username + &quot;/&quot; + config.repo + &quot;/contents/&quot; + repoPath;"></outline>
-			<outline text="var theRequest = {">
-				<outline text="method: &quot;GET&quot;,"></outline>
-				<outline text="url: url,"></outline>
-				<outline text="headers: {">
-					<outline text="&quot;User-Agent&quot;: config.userAgent"></outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="};"></outline>
-				</outline>
-			<outline text="request (theRequest, function (err, response, body) { ">
-				<outline text="var jstruct = undefined;"></outline>
-				<outline text="if (err) {">
-					<outline text="console.log (&quot;getGitHubFile: err.message == &quot; + err.message);"></outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="else {">
-					<outline isComment="true" text="console.log (&quot;getGitHubFile: response.statusCode == &quot; + response.statusCode);"></outline>
-					<outline text="try {">
-						<outline text="jstruct = JSON.parse (body);"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="catch (err) {">
-						<outline text="console.log (&quot;getGitHubFile: err.message == &quot; + err.message);"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="if (callback !== undefined) {">
-					<outline text="callback (jstruct);"></outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="});"></outline>
-				</outline>
-			<outline text="}"></outline>
-			</outline>
 		<outline text="function getDirectory (folder, callback) {">
 			<outline text="if (!utils.endsWith (folder, &quot;/&quot;)) {">
 				<outline text="folder += &quot;/&quot;;"></outline>
@@ -86,7 +85,7 @@
 			<outline text="utils.sureFilePath (folder, function () {">
 				<outline text="fs.readdir (folder, function (err, list) {">
 					<outline text="if (err) {">
-						<outline text="console.log (&quot;visitDirectory: err.message == &quot; + err.message);"></outline>
+						<outline text="console.log (&quot;getDirectory: err.message == &quot; + err.message);"></outline>
 						<outline text="}"></outline>
 						</outline>
 					<outline text="else {">
@@ -102,122 +101,31 @@
 				</outline>
 			<outline text="}"></outline>
 			</outline>
-		<outline text=""></outline>
-		<outline text=""></outline>
-		<outline text="function uploadOneObject (data, repoPath, callback) {">
-			<outline text="var bodyStruct = { ">
+		<outline text="function uploadToGithub (path, data, type, callback) {">
+			<outline text="const options = {">
+				<outline text="username: config.username,"></outline>
+				<outline text="repo: config.repo,"></outline>
+				<outline text="password: config.password,"></outline>
+				<outline text="repoPath: path,"></outline>
+				<outline text="data: data,"></outline>
+				<outline text="type: (type === undefined) ? &quot;text/plain&quot; : type,"></outline>
+				<outline text="committer: config.committer,"></outline>
 				<outline text="message: config.message,"></outline>
-				<outline text="committer: {">
-					<outline text="name: config.committer.name,"></outline>
-					<outline text="email: config.committer.email"></outline>
-					<outline text="},"></outline>
-					</outline>
-				<outline text="content: new Buffer (data).toString ('base64')"></outline>
+				<outline text="userAgent: config.userAgent"></outline>
 				<outline text="};"></outline>
 				</outline>
-			<outline text="getGitHubFile (repoPath, function (jstruct) {">
-				<outline text="if (jstruct !== undefined) {">
-					<outline text="bodyStruct.sha = jstruct.sha;"></outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="var username = config.username;"></outline>
-				<outline text="var url = &quot;https://&quot; + username + &quot;:&quot; + config.password + &quot;@api.github.com/repos/&quot; + username + &quot;/&quot; + config.repo + &quot;/contents/&quot; + repoPath;"></outline>
-				<outline text="var theRequest = {">
-					<outline text="method: &quot;PUT&quot;,"></outline>
-					<outline text="url: url,"></outline>
-					<outline text="body: JSON.stringify (bodyStruct),"></outline>
-					<outline text="headers: {">
-						<outline text="&quot;User-Agent&quot;: config.userAgent,"></outline>
-						<outline text="&quot;Content-Type&quot;: config.type"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="};"></outline>
-					</outline>
-				<outline text="request (theRequest, function (err, response, body) { ">
-					<outline text="if (err) {">
-						<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, err.message == &quot; + err.message);"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="else {">
-						<outline text="console.log (&quot;uploadOneObject: response.statusCode == &quot; + response.statusCode);"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="if (callback !== undefined) {">
-						<outline text="callback ();"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="});"></outline>
-					</outline>
-				<outline text="});"></outline>
-				</outline>
-			<outline text="}"></outline>
-			</outline>
-		<outline text="function uploadOneFile (f, repoPath, callback) {">
-			<outline text="fs.readFile (f, function (err, data) {">
-				<outline text="if (err) {">
-					<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, err.message == &quot; + err.message);"></outline>
-					<outline text="if (callback !== undefined) {">
-						<outline text="callback ();"></outline>
-						<outline text="}"></outline>
-						</outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="else {">
-					<outline text="uploadOneObject (data, repoPath, callback);"></outline>
-					<outline isComment="true" text=""></outline>
-					<outline isComment="true" text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, contains &quot; + data.length + &quot; chars.&quot;);"></outline>
-					<outline isComment="true" text="var bodyStruct = { ">
-						<outline text="message: config.message,"></outline>
-						<outline text="committer: {">
-							<outline text="name: config.committer.name,"></outline>
-							<outline text="email: config.committer.email"></outline>
-							<outline text="},"></outline>
-							</outline>
-						<outline text="content: new Buffer (data).toString ('base64')"></outline>
-						<outline text="};"></outline>
-						</outline>
-					<outline isComment="true" text="getGitHubFile (repoPath, function (jstruct) {">
-						<outline text="if (jstruct !== undefined) {">
-							<outline text="bodyStruct.sha = jstruct.sha;"></outline>
-							<outline text="}"></outline>
-							</outline>
-						<outline text="var username = config.username;"></outline>
-						<outline text="var url = &quot;https://&quot; + username + &quot;:&quot; + config.password + &quot;@api.github.com/repos/&quot; + username + &quot;/&quot; + config.repo + &quot;/contents/&quot; + repoPath;"></outline>
-						<outline text="var theRequest = {">
-							<outline text="method: &quot;PUT&quot;,"></outline>
-							<outline text="url: url,"></outline>
-							<outline text="body: JSON.stringify (bodyStruct),"></outline>
-							<outline text="headers: {">
-								<outline text="&quot;User-Agent&quot;: config.userAgent,"></outline>
-								<outline text="&quot;Content-Type&quot;: config.type"></outline>
-								<outline text="}"></outline>
-								</outline>
-							<outline text="};"></outline>
-							</outline>
-						<outline text="request (theRequest, function (err, response, body) { ">
-							<outline text="if (err) {">
-								<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, err.message == &quot; + err.message);"></outline>
-								<outline text="}"></outline>
-								</outline>
-							<outline text="else {">
-								<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, response.statusCode == &quot; + response.statusCode);"></outline>
-								<outline text="}"></outline>
-								</outline>
-							<outline text="if (callback !== undefined) {">
-								<outline text="callback ();"></outline>
-								<outline text="}"></outline>
-								</outline>
-							<outline text="});"></outline>
-							</outline>
-						<outline text="});"></outline>
-						</outline>
+			<outline text="davegithub.uploadFile (options, function (err, response, body) {">
+				<outline isComment="true" text="console.log (&quot;uploadToGithub: options == &quot; + utils.jsonStringify (options));"></outline>
+				<outline text="console.log (&quot;uploadToGithub: path == &quot; + path + &quot;, status == &quot; + response.statusCode);"></outline>
+				<outline text="if (callback !== undefined) {">
+					<outline text="callback ();"></outline>
 					<outline text="}"></outline>
 					</outline>
 				<outline text="});"></outline>
 				</outline>
 			<outline text="}"></outline>
 			</outline>
-		<outline text="function uploadHttpFile (url, repoPath, callback) {">
+		<outline text="function uploadFromUrl (path, url, type, callback) {">
 			<outline text="var theRequest = {">
 				<outline text="method: &quot;GET&quot;,"></outline>
 				<outline text="url: url,"></outline>
@@ -229,7 +137,7 @@
 				</outline>
 			<outline text="request (theRequest, function (err, response, body) { ">
 				<outline text="if (err) {">
-					<outline text="console.log (&quot;uploadHttpFile: err.message == &quot; + err.message);"></outline>
+					<outline text="console.log (&quot;uploadFromUrl: err.message == &quot; + err.message);"></outline>
 					<outline text="if (callback !== undefined) {">
 						<outline text="callback ();"></outline>
 						<outline text="}"></outline>
@@ -237,7 +145,27 @@
 					<outline text="}"></outline>
 					</outline>
 				<outline text="else {">
-					<outline text="uploadOneObject (body, repoPath, callback);"></outline>
+					<outline isComment="true" text="console.log (&quot;uploadFromUrl: body.length == &quot; + body.toString ().length);"></outline>
+					<outline text="uploadToGithub (path, body.toString (), type, callback);"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="});"></outline>
+				</outline>
+			<outline text="}"></outline>
+			</outline>
+		<outline text="function uploadFromFile (f, repoPath, callback) {">
+			<outline text="fs.readFile (f, function (err, data) {">
+				<outline text="if (err) {">
+					<outline text="console.log (&quot;uploadFromFile: f == &quot; + f + &quot;, err.message == &quot; + err.message);"></outline>
+					<outline text="if (callback !== undefined) {">
+						<outline text="callback ();"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="else {">
+					<outline isComment="true" text="console.log (&quot;uploadFromFile: f == &quot; + f + &quot;, data.length == &quot; + data.length);"></outline>
+					<outline text="uploadToGithub (repoPath, data.toString (), undefined, callback);"></outline>
 					<outline text="}"></outline>
 					</outline>
 				<outline text="});"></outline>
@@ -247,18 +175,18 @@
 		<outline text="function uploadTodaysFile (today, foldername, ext, callback) {">
 			<outline text="var f = config.basefolder + foldername + &quot;/dave/&quot; + utils.getDatePath (today, false) + ext;"></outline>
 			<outline text="var repoPath = config.basepath + foldername + &quot;/&quot; + utils.getDatePath (today, false) + ext;"></outline>
-			<outline text="uploadOneFile (f, repoPath, callback);"></outline>
+			<outline text="uploadFromFile (f, repoPath, callback);"></outline>
 			<outline text="}"></outline>
 			</outline>
-		<outline text="function doOneFolder (now, foldername, callback) {">
-			<outline text="var folder = config.basefolder + foldername + &quot;/dave/&quot; + utils.getDatePath (now, true);"></outline>
+		<outline text="function uploadFolderToGithub (today, foldername, callback) {">
+			<outline text="var folder = config.basefolder + foldername + &quot;/dave/&quot; + utils.getDatePath (today, true);"></outline>
 			<outline text="getDirectory (folder, function (list) {">
 				<outline text="function donextfile (ix) {">
 					<outline text="if (ix &lt; list.length) {">
 						<outline text="let fname = list [ix];"></outline>
-						<outline text="let repoPath = config.basepath + foldername + &quot;/&quot; + utils.getDatePath (now, true) + fname;"></outline>
+						<outline text="let repoPath = config.basepath + foldername + &quot;/&quot; + utils.getDatePath (today, true) + fname;"></outline>
 						<outline isComment="true" text="console.log (&quot;repoPath == &quot; + repoPath);"></outline>
-						<outline text="uploadOneFile (folder + fname, repoPath, function () {">
+						<outline text="uploadFromFile (folder + fname, repoPath, function () {">
 							<outline text="donextfile (ix + 1);"></outline>
 							<outline text="});"></outline>
 							</outline>
@@ -278,12 +206,49 @@
 				</outline>
 			<outline text="}"></outline>
 			</outline>
-		<outline text="function doUploads () {">
-			<outline text="uploadHttpFile (config.urlRssFile, config.basepath + config.pathRssFile, function () {">
-				<outline text="var yesterday = utils.dateYesterday (new Date ());"></outline>
-				<outline text="uploadTodaysFile (yesterday, &quot;pages&quot;, &quot;.html&quot;, function () {">
-					<outline text="uploadTodaysFile (yesterday, &quot;days&quot;, &quot;.json&quot;, function () {">
-						<outline text="doOneFolder (yesterday, &quot;items&quot;);"></outline>
+		<outline text="function uploadMiscFiles (callback) {">
+			<outline text="function uploadOne (ix) {">
+				<outline text="if (ix &lt; config.miscFiles.length) {">
+					<outline text="let item = config.miscFiles [ix];"></outline>
+					<outline text="uploadFromUrl (item.path, item.url, item.type, function () {">
+						<outline text="uploadOne (ix + 1);"></outline>
+						<outline text="});"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="else {">
+					<outline text="if (callback !== undefined) {">
+						<outline text="callback ();"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="uploadOne (0);"></outline>
+			<outline text="}"></outline>
+			</outline>
+		<outline text="function setWhenLastUpdate () {">
+			<outline text="stats.whenLastUpdate = new Date ();"></outline>
+			<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
+				<outline text="});"></outline>
+				</outline>
+			<outline text="}"></outline>
+			</outline>
+		<outline text="function doUploads (callback) {">
+			<outline text="var yesterday = utils.dateYesterday (new Date ());"></outline>
+			<outline text="setWhenLastUpdate ();"></outline>
+			<outline text="uploadTodaysFile (yesterday, &quot;pages&quot;, &quot;.html&quot;, function () {">
+				<outline text="uploadTodaysFile (yesterday, &quot;days&quot;, &quot;.json&quot;, function () {">
+					<outline text="uploadFolderToGithub (yesterday, &quot;items&quot;, function () {">
+						<outline text="uploadMiscFiles (function () {">
+							<outline isComment="true" text="console.log (&quot;misc files have been uploaded&quot;);"></outline>
+							<outline text="if (callback !== undefined) {">
+								<outline text="callback ();"></outline>
+								<outline text="}"></outline>
+								</outline>
+							<outline text="});"></outline>
+							</outline>
 						<outline text="});"></outline>
 						</outline>
 					<outline text="});"></outline>
@@ -295,10 +260,6 @@
 		<outline text="function checkForUpload () {">
 			<outline text="var now = new Date ();"></outline>
 			<outline text="if (!utils.sameDay (now, stats.whenLastUpdate)) {">
-				<outline text="stats.whenLastUpdate = now;"></outline>
-				<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
-					<outline text="});"></outline>
-					</outline>
 				<outline text="console.log (&quot;&quot;);"></outline>
 				<outline text="doUploads ();"></outline>
 				<outline text="}"></outline>
@@ -309,52 +270,446 @@
 			<outline text="var now = new Date ();"></outline>
 			<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;: &quot; + now.toLocaleTimeString ());"></outline>
 			<outline text="checkForUpload ();"></outline>
-			<outline isComment="true" text="if (!utils.sameDay (now, stats.whenLastUpdate)) {">
-				<outline text="stats.whenLastUpdate = now;"></outline>
-				<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
-					<outline text="});"></outline>
-					</outline>
-				<outline text="doUploads ();"></outline>
-				<outline text="}"></outline>
-				</outline>
-			<outline text="}"></outline>
-			</outline>
-		<outline text="function runTestCode () {">
-			<outline text="doUploads ();"></outline>
-			<outline isComment="true" text="console.log (&quot;runTestCode&quot;);"></outline>
-			<outline isComment="true" text="uploadHttpFile (config.urlRssFile, config.basepath + config.pathRssFile, function () {">
-				<outline text="console.log (&quot;uploadHttpFile returned.&quot;);"></outline>
-				<outline text="});"></outline>
-				</outline>
 			<outline text="}"></outline>
 			</outline>
 		<outline text=""></outline>
 		<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;.&quot;);"></outline>
-		<outline text="fs.readFile (fnameStats, function (err, data) {">
-			<outline text="if (!err) {">
-				<outline text="let jstruct = JSON.parse (data);"></outline>
-				<outline text="for (x in jstruct) {">
-					<outline text="stats [x] = jstruct [x];"></outline>
+		<outline text="fs.readFile (fnameConfig, function (err, data) {">
+			<outline text="if (err) {">
+				<outline text="console.log (&quot;uploadToGithub: err.message == &quot; + err.message);"></outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="else {">
+				<outline text="const jstruct = JSON.parse (data);"></outline>
+				<outline text="for (var x in jstruct) {">
+					<outline text="config [x] = jstruct [x];"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="doUploads (function () { //do an upload at startup">
+					<outline text="utils.runAtTopOfMinute (function () {">
+						<outline text="setInterval (everyMinute, 60000); "></outline>
+						<outline text="everyMinute ();"></outline>
+						<outline text="});"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="});"></outline>
+			</outline>
+		<outline text=""></outline>
+		<outline text=""></outline>
+		<outline isComment="true" text="old code -- commented 8/22/18M by DW">
+			<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.4.16&quot;;"></outline>
+			<outline isComment="true" text=""></outline>
+			<outline isComment="true" text="Notes">
+				<outline text="8/21/18; 11:43:18 AM by DW">
+					<outline text="Added miscFiles in config. Retired the Frontier script explained below.">
+						<outline text="The code that uploads subscriptions.opml for podcatch.com is in Frontier, in nodeEditorSuite.utilities.nightlyGithubUpload."></outline>
+						<outline text="And now I'm adding code that uploads glossary.opml so the archive includes the glossary. I always forget to save that."></outline>
+						</outline>
+					</outline>
+				</outline>
+			<outline isComment="true" text=""></outline>
+			<outline text="const utils = require (&quot;daveutils&quot;);"></outline>
+			<outline text="const request = require (&quot;request&quot;);"></outline>
+			<outline text="const fs = require (&quot;fs&quot;);"></outline>
+			<outline text=""></outline>
+			<outline text="var config = {">
+				<outline text="username: &quot;scripting&quot;,"></outline>
+				<outline text="repo: &quot;Scripting-News&quot;,"></outline>
+				<outline isComment="true" text="repo: &quot;test1&quot;,"></outline>
+				<outline text="basefolder: &quot;data/&quot;,"></outline>
+				<outline text="basepath: &quot;blog/&quot;,"></outline>
+				<outline text="type: &quot;text/html&quot;,"></outline>
+				<outline text="urlRssFile: &quot;http://scripting.com/rss.xml&quot;,"></outline>
+				<outline text="pathRssFile: &quot;rss.xml&quot;,"></outline>
+				<outline text=""></outline>
+				<outline text="miscFiles: [ //8/21/18 by DW">
+					<outline text="{">
+						<outline text="url: &quot;http://scripting.com/rss.xml&quot;,"></outline>
+						<outline text="path: &quot;blog/rss.xml&quot;,"></outline>
+						<outline text="type: &quot;text/xml&quot;"></outline>
+						<outline text="},"></outline>
+						</outline>
+					<outline text="{">
+						<outline text="url: &quot;http://electricserver.scripting.com/users/davewiner/electric/glossary.opml&quot;,"></outline>
+						<outline text="path: &quot;blog/misc/glossary.opml&quot;,"></outline>
+						<outline text="type: &quot;text/xml&quot;"></outline>
+						<outline text="},"></outline>
+						</outline>
+					<outline text="{">
+						<outline text="url: &quot;http://podcatch.com/users/davewiner/podcasts.opml&quot;,"></outline>
+						<outline text="path: &quot;podcatch/subscriptions.opml&quot;,"></outline>
+						<outline text="type: &quot;text/xml&quot;"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="],"></outline>
+					</outline>
+				<outline text=""></outline>
+				<outline text="committer: {">
+					<outline text="name: &quot;Dave Winer&quot;,"></outline>
+					<outline text="email: &quot;dave.winer@gmail.com&quot;"></outline>
+					<outline text="},"></outline>
+					</outline>
+				<outline text="message: &quot;Nightly update&quot;,"></outline>
+				<outline text="userAgent: &quot;Dave's OldSchool GitHub Uploader&quot;"></outline>
+				<outline text="};"></outline>
+				</outline>
+			<outline text="var stats = {">
+				<outline text="whenLastUpdate: new Date (0)"></outline>
+				<outline text="};"></outline>
+				</outline>
+			<outline text="const fnameStats = &quot;stats.json&quot;, fnameConfig = &quot;config.json&quot;;"></outline>
+			<outline text=""></outline>
+			<outline text="function getGitHubFile (repoPath, callback) {">
+				<outline text="var url = &quot;https://&quot; + config.username + &quot;:&quot; + config.password + &quot;@api.github.com/repos/&quot; + config.username + &quot;/&quot; + config.repo + &quot;/contents/&quot; + repoPath;"></outline>
+				<outline text="var theRequest = {">
+					<outline text="method: &quot;GET&quot;,"></outline>
+					<outline text="url: url,"></outline>
+					<outline text="headers: {">
+						<outline text="&quot;User-Agent&quot;: config.userAgent"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="};"></outline>
+					</outline>
+				<outline text="request (theRequest, function (err, response, body) { ">
+					<outline text="var jstruct = undefined;"></outline>
+					<outline text="if (err) {">
+						<outline text="console.log (&quot;getGitHubFile: err.message == &quot; + err.message);"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="else {">
+						<outline isComment="true" text="console.log (&quot;getGitHubFile: response.statusCode == &quot; + response.statusCode);"></outline>
+						<outline text="try {">
+							<outline text="jstruct = JSON.parse (body);"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="catch (err) {">
+							<outline text="console.log (&quot;getGitHubFile: err.message == &quot; + err.message);"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="if (callback !== undefined) {">
+						<outline text="callback (jstruct);"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function getDirectory (folder, callback) {">
+				<outline text="if (!utils.endsWith (folder, &quot;/&quot;)) {">
+					<outline text="folder += &quot;/&quot;;"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="utils.sureFilePath (folder, function () {">
+					<outline text="fs.readdir (folder, function (err, list) {">
+						<outline text="if (err) {">
+							<outline text="console.log (&quot;visitDirectory: err.message == &quot; + err.message);"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="else {">
+							<outline text="if (list !== undefined) { ">
+								<outline text="callback (list);"></outline>
+								<outline text="}"></outline>
+								</outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="});"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function uploadOneObject (data, repoPath, callback) {">
+				<outline text="var bodyStruct = { ">
+					<outline text="message: config.message,"></outline>
+					<outline text="committer: {">
+						<outline text="name: config.committer.name,"></outline>
+						<outline text="email: config.committer.email"></outline>
+						<outline text="},"></outline>
+						</outline>
+					<outline text="content: new Buffer (data).toString ('base64')"></outline>
+					<outline text="};"></outline>
+					</outline>
+				<outline text="getGitHubFile (repoPath, function (jstruct) {">
+					<outline text="if (jstruct !== undefined) {">
+						<outline text="bodyStruct.sha = jstruct.sha;"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="var username = config.username;"></outline>
+					<outline text="var url = &quot;https://&quot; + username + &quot;:&quot; + config.password + &quot;@api.github.com/repos/&quot; + username + &quot;/&quot; + config.repo + &quot;/contents/&quot; + repoPath;"></outline>
+					<outline text="var theRequest = {">
+						<outline text="method: &quot;PUT&quot;,"></outline>
+						<outline text="url: url,"></outline>
+						<outline text="body: JSON.stringify (bodyStruct),"></outline>
+						<outline text="headers: {">
+							<outline text="&quot;User-Agent&quot;: config.userAgent,"></outline>
+							<outline text="&quot;Content-Type&quot;: config.type"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="};"></outline>
+						</outline>
+					<outline text="request (theRequest, function (err, response, body) { ">
+						<outline text="if (err) {">
+							<outline text="console.log (&quot;uploadOneObject: repoPath == &quot; + repoPath + &quot;, err.message == &quot; + err.message);"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="else {">
+							<outline text="console.log (&quot;uploadOneObject: repoPath == &quot; + repoPath + &quot;, status == &quot; + response.statusCode);"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="if (callback !== undefined) {">
+							<outline text="callback ();"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="});"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function uploadOneFile (f, repoPath, callback) {">
+				<outline text="fs.readFile (f, function (err, data) {">
+					<outline text="if (err) {">
+						<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, err.message == &quot; + err.message);"></outline>
+						<outline text="if (callback !== undefined) {">
+							<outline text="callback ();"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="else {">
+						<outline text="uploadOneObject (data, repoPath, callback);"></outline>
+						<outline isComment="true" text=""></outline>
+						<outline isComment="true" text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, contains &quot; + data.length + &quot; chars.&quot;);"></outline>
+						<outline isComment="true" text="var bodyStruct = { ">
+							<outline text="message: config.message,"></outline>
+							<outline text="committer: {">
+								<outline text="name: config.committer.name,"></outline>
+								<outline text="email: config.committer.email"></outline>
+								<outline text="},"></outline>
+								</outline>
+							<outline text="content: new Buffer (data).toString ('base64')"></outline>
+							<outline text="};"></outline>
+							</outline>
+						<outline isComment="true" text="getGitHubFile (repoPath, function (jstruct) {">
+							<outline text="if (jstruct !== undefined) {">
+								<outline text="bodyStruct.sha = jstruct.sha;"></outline>
+								<outline text="}"></outline>
+								</outline>
+							<outline text="var username = config.username;"></outline>
+							<outline text="var url = &quot;https://&quot; + username + &quot;:&quot; + config.password + &quot;@api.github.com/repos/&quot; + username + &quot;/&quot; + config.repo + &quot;/contents/&quot; + repoPath;"></outline>
+							<outline text="var theRequest = {">
+								<outline text="method: &quot;PUT&quot;,"></outline>
+								<outline text="url: url,"></outline>
+								<outline text="body: JSON.stringify (bodyStruct),"></outline>
+								<outline text="headers: {">
+									<outline text="&quot;User-Agent&quot;: config.userAgent,"></outline>
+									<outline text="&quot;Content-Type&quot;: config.type"></outline>
+									<outline text="}"></outline>
+									</outline>
+								<outline text="};"></outline>
+								</outline>
+							<outline text="request (theRequest, function (err, response, body) { ">
+								<outline text="if (err) {">
+									<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, err.message == &quot; + err.message);"></outline>
+									<outline text="}"></outline>
+									</outline>
+								<outline text="else {">
+									<outline text="console.log (&quot;uploadOneFile: f == &quot; + f + &quot;, response.statusCode == &quot; + response.statusCode);"></outline>
+									<outline text="}"></outline>
+									</outline>
+								<outline text="if (callback !== undefined) {">
+									<outline text="callback ();"></outline>
+									<outline text="}"></outline>
+									</outline>
+								<outline text="});"></outline>
+								</outline>
+							<outline text="});"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function uploadHttpFile (url, repoPath, type, callback) {">
+				<outline text="var theRequest = {">
+					<outline text="method: &quot;GET&quot;,"></outline>
+					<outline text="url: url,"></outline>
+					<outline text="headers: {">
+						<outline text="&quot;User-Agent&quot;: config.userAgent"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="};"></outline>
+					</outline>
+				<outline text="request (theRequest, function (err, response, body) { ">
+					<outline text="if (err) {">
+						<outline text="console.log (&quot;uploadHttpFile: err.message == &quot; + err.message);"></outline>
+						<outline text="if (callback !== undefined) {">
+							<outline text="callback ();"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="else {">
+						<outline text="uploadOneObject (body, repoPath, callback);"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function uploadMiscFiles (callback) { //8/21/18 by DW">
+				<outline text="function uploadOne (ix) {">
+					<outline text="if (ix &lt; config.miscFiles.length) {">
+						<outline text="let item = config.miscFiles [ix];"></outline>
+						<outline text="uploadHttpFile (item.url, item.path, item.type, function () {">
+							<outline text="uploadOne (ix + 1);"></outline>
+							<outline text="});"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="else {">
+						<outline text="if (callback !== undefined) {">
+							<outline text="callback ();"></outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="uploadOne (0);"></outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text=""></outline>
+			<outline isComment="true" text="function uploadMiscFiles () { //8/21/18 by DW">
+				<outline text="for (var x in config.miscFiles) {">
+					<outline text="let item = config.miscFiles [x];"></outline>
+					<outline text="uploadHttpFile (item.url, item.path);"></outline>
 					<outline text="}"></outline>
 					</outline>
 				<outline text="}"></outline>
 				</outline>
-			<outline text="fs.readFile (fnameConfig, function (err, data) {">
-				<outline text="var jstruct = JSON.parse (data);"></outline>
-				<outline text="for (x in jstruct) {">
-					<outline text="config [x] = jstruct [x];"></outline>
+			<outline text=""></outline>
+			<outline text="function uploadTodaysFile (today, foldername, ext, callback) {">
+				<outline text="var f = config.basefolder + foldername + &quot;/dave/&quot; + utils.getDatePath (today, false) + ext;"></outline>
+				<outline text="var repoPath = config.basepath + foldername + &quot;/&quot; + utils.getDatePath (today, false) + ext;"></outline>
+				<outline text="uploadOneFile (f, repoPath, callback);"></outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function doOneFolder (now, foldername, callback) {">
+				<outline text="var folder = config.basefolder + foldername + &quot;/dave/&quot; + utils.getDatePath (now, true);"></outline>
+				<outline text="getDirectory (folder, function (list) {">
+					<outline text="function donextfile (ix) {">
+						<outline text="if (ix &lt; list.length) {">
+							<outline text="let fname = list [ix];"></outline>
+							<outline text="let repoPath = config.basepath + foldername + &quot;/&quot; + utils.getDatePath (now, true) + fname;"></outline>
+							<outline isComment="true" text="console.log (&quot;repoPath == &quot; + repoPath);"></outline>
+							<outline text="uploadOneFile (folder + fname, repoPath, function () {">
+								<outline text="donextfile (ix + 1);"></outline>
+								<outline text="});"></outline>
+								</outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="else {">
+							<outline text="if (callback !== undefined) {">
+								<outline text="callback ();"></outline>
+								<outline text="}"></outline>
+								</outline>
+							<outline text="}"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="donextfile (0);"></outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function doUploads () {">
+				<outline text="uploadHttpFile (config.urlRssFile, config.basepath + config.pathRssFile, function () {">
+					<outline text="var yesterday = utils.dateYesterday (new Date ());"></outline>
+					<outline text="uploadTodaysFile (yesterday, &quot;pages&quot;, &quot;.html&quot;, function () {">
+						<outline text="uploadTodaysFile (yesterday, &quot;days&quot;, &quot;.json&quot;, function () {">
+							<outline text="uploadMiscFiles (function () { //8/22/18 by DW">
+								<outline text="doOneFolder (yesterday, &quot;items&quot;);"></outline>
+								<outline text="});"></outline>
+								</outline>
+							<outline text="});"></outline>
+							</outline>
+						<outline text="});"></outline>
+						</outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function checkForUpload () {">
+				<outline text="var now = new Date ();"></outline>
+				<outline text="if (!utils.sameDay (now, stats.whenLastUpdate)) {">
+					<outline text="stats.whenLastUpdate = now;"></outline>
+					<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
+						<outline text="});"></outline>
+						</outline>
+					<outline text="console.log (&quot;&quot;);"></outline>
+					<outline text="doUploads ();"></outline>
 					<outline text="}"></outline>
 					</outline>
-				<outline text="checkForUpload (); //check immediately at startup"></outline>
-				<outline text="runTestCode (); //comment out to deploy for real -- 7/12/18 by DW"></outline>
-				<outline text="utils.runAtTopOfMinute (function () {">
-					<outline text="setInterval (everyMinute, 60000); "></outline>
-					<outline text="everyMinute ();"></outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function everyMinute () {">
+				<outline text="var now = new Date ();"></outline>
+				<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;: &quot; + now.toLocaleTimeString ());"></outline>
+				<outline text="checkForUpload ();"></outline>
+				<outline isComment="true" text="if (!utils.sameDay (now, stats.whenLastUpdate)) {">
+					<outline text="stats.whenLastUpdate = now;"></outline>
+					<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
+						<outline text="});"></outline>
+						</outline>
+					<outline text="doUploads ();"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function runTestCode () {">
+				<outline text="doUploads ();"></outline>
+				<outline isComment="true" text="console.log (&quot;runTestCode&quot;);"></outline>
+				<outline isComment="true" text="uploadHttpFile (config.urlRssFile, config.basepath + config.pathRssFile, function () {">
+					<outline text="console.log (&quot;uploadHttpFile returned.&quot;);"></outline>
+					<outline text="});"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text=""></outline>
+			<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;.&quot;);"></outline>
+			<outline text="fs.readFile (fnameStats, function (err, data) {">
+				<outline text="if (!err) {">
+					<outline text="let jstruct = JSON.parse (data);"></outline>
+					<outline text="for (x in jstruct) {">
+						<outline text="stats [x] = jstruct [x];"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="fs.readFile (fnameConfig, function (err, data) {">
+					<outline text="var jstruct = JSON.parse (data);"></outline>
+					<outline text="for (x in jstruct) {">
+						<outline text="config [x] = jstruct [x];"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="checkForUpload (); //check immediately at startup"></outline>
+					<outline text="runTestCode (); //comment out to deploy for real -- 7/12/18 by DW"></outline>
+					<outline text="utils.runAtTopOfMinute (function () {">
+						<outline text="setInterval (everyMinute, 60000); "></outline>
+						<outline text="everyMinute ();"></outline>
+						<outline text="});"></outline>
+						</outline>
 					<outline text="});"></outline>
 					</outline>
 				<outline text="});"></outline>
 				</outline>
-			<outline text="});"></outline>
 			</outline>
 		</body>
 	</opml>
