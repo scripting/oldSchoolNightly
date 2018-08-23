@@ -1,4 +1,4 @@
-const myProductName = "Old School Nightly", myVersion = "0.5.1";
+const myProductName = "Old School Nightly", myVersion = "0.5.6";
 
 
 const fs = require ("fs");
@@ -12,9 +12,6 @@ var config = {
 	basefolder: "data/",
 	basepath: "blog/",
 	type: "text/html",
-	urlRssFile: "http://scripting.com/rss.xml",
-	pathRssFile: "rss.xml",
-	
 	miscFiles: [ //8/21/18 by DW
 		{
 			url: "http://scripting.com/rss.xml",
@@ -32,7 +29,6 @@ var config = {
 			type: "text/xml"
 			}
 		],
-	
 	committer: {
 		name: "Dave Winer",
 		email: "dave.winer@gmail.com"
@@ -41,11 +37,20 @@ var config = {
 	userAgent: "Dave's OldSchool GitHub Uploader"
 	};
 var stats = {
-	whenLastUpdate: new Date (0)
+	whenLastUpdate: new Date (0),
+	ctUploads: 0,
+	whenLastUpload: new Date (0),
+	ctUploadErrors: 0,
+	ctConsecutiveUploadErrors: 0,
+	whenLastUploadError: new Date (0)
 	};
 
 const fnameStats = "stats.json", fnameConfig = "config.json";
+var flStatsChanged = false;
 
+function statsChanged () {
+	flStatsChanged = true;
+	}
 function getDirectory (folder, callback) {
 	if (!utils.endsWith (folder, "/")) {
 		folder += "/";
@@ -77,6 +82,19 @@ function uploadToGithub (path, data, type, callback) {
 		};
 	davegithub.uploadFile (options, function (err, response, body) {
 		console.log ("uploadToGithub: path == " + path + ", status == " + response.statusCode);
+		//stats
+			var now = new Date ();
+			stats.ctUploads++;
+			stats.whenLastUpload = now;
+			if (err) {
+				stats.ctUploadErrors++;
+				stats.ctConsecutiveUploadErrors++;
+				stats.whenLastUploadError = now;
+				}
+			else {
+				stats.ctConsecutiveUploadErrors = 0;
+				}
+			statsChanged ();
 		if (callback !== undefined) {
 			callback ();
 			}
@@ -158,8 +176,7 @@ function uploadMiscFiles (callback) {
 	}
 function setWhenLastUpdate () {
 	stats.whenLastUpdate = new Date ();
-	fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {
-		});
+	statsChanged ();
 	}
 function doUploads (callback) {
 	var yesterday = utils.dateYesterday (new Date ());
@@ -187,25 +204,38 @@ function everyMinute () {
 	var now = new Date ();
 	console.log ("\n" + myProductName + " v" + myVersion + ": " + now.toLocaleTimeString ());
 	checkForUpload ();
-	}
-
-console.log ("\n" + myProductName + " v" + myVersion + ".");
-fs.readFile (fnameConfig, function (err, data) {
-	if (err) {
-		console.log ("uploadToGithub: err.message == " + err.message);
-		}
-	else {
-		const jstruct = JSON.parse (data);
-		for (var x in jstruct) {
-			config [x] = jstruct [x];
-			}
-		doUploads (function () { //do an upload at startup
-			utils.runAtTopOfMinute (function () {
-				setInterval (everyMinute, 60000); 
-				everyMinute ();
-				});
+	if (flStatsChanged) {
+		flStatsChanged = false;
+		fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {
 			});
 		}
+	}
+
+console.log ("\n" + myProductName + " v" + myVersion + ".\n");
+fs.readFile (fnameStats, function (err, data) {
+	if (!err) {
+		const jstruct = JSON.parse (data);
+		for (var x in jstruct) {
+			stats [x] = jstruct [x];
+			}
+		}
+	fs.readFile (fnameConfig, function (err, data) {
+		if (err) {
+			console.log ("uploadToGithub: err.message == " + err.message);
+			}
+		else {
+			const jstruct = JSON.parse (data);
+			for (var x in jstruct) {
+				config [x] = jstruct [x];
+				}
+			doUploads (function () { //do an upload at startup
+				utils.runAtTopOfMinute (function () {
+					setInterval (everyMinute, 60000); 
+					everyMinute ();
+					});
+				});
+			}
+		});
 	});
 
 

@@ -11,7 +11,7 @@
 		<windowRight>1500</windowRight>
 		</head>
 	<body text="oldschoolnightly.js">
-		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.1&quot;;"></outline>
+		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.6&quot;;"></outline>
 		<outline text=""></outline>
 		<outline isComment="true" text="Notes">
 			<outline text="8/22/18; 4:16:55 PM by DW">
@@ -36,9 +36,8 @@
 			<outline text="basefolder: &quot;data/&quot;,"></outline>
 			<outline text="basepath: &quot;blog/&quot;,"></outline>
 			<outline text="type: &quot;text/html&quot;,"></outline>
-			<outline text="urlRssFile: &quot;http://scripting.com/rss.xml&quot;,"></outline>
-			<outline text="pathRssFile: &quot;rss.xml&quot;,"></outline>
-			<outline text=""></outline>
+			<outline isComment="true" text="urlRssFile: &quot;http://scripting.com/rss.xml&quot;,"></outline>
+			<outline isComment="true" text="pathRssFile: &quot;rss.xml&quot;,"></outline>
 			<outline text="miscFiles: [ //8/21/18 by DW">
 				<outline text="{">
 					<outline text="url: &quot;http://scripting.com/rss.xml&quot;,"></outline>
@@ -60,7 +59,6 @@
 					</outline>
 				<outline text="],"></outline>
 				</outline>
-			<outline text=""></outline>
 			<outline text="committer: {">
 				<outline text="name: &quot;Dave Winer&quot;,"></outline>
 				<outline text="email: &quot;dave.winer@gmail.com&quot;"></outline>
@@ -71,12 +69,22 @@
 			<outline text="};"></outline>
 			</outline>
 		<outline text="var stats = {">
-			<outline text="whenLastUpdate: new Date (0)"></outline>
+			<outline text="whenLastUpdate: new Date (0),"></outline>
+			<outline text="ctUploads: 0,"></outline>
+			<outline text="whenLastUpload: new Date (0),"></outline>
+			<outline text="ctUploadErrors: 0,"></outline>
+			<outline text="ctConsecutiveUploadErrors: 0,"></outline>
+			<outline text="whenLastUploadError: new Date (0)"></outline>
 			<outline text="};"></outline>
 			</outline>
 		<outline text=""></outline>
 		<outline text="const fnameStats = &quot;stats.json&quot;, fnameConfig = &quot;config.json&quot;;"></outline>
+		<outline text="var flStatsChanged = false;"></outline>
 		<outline text=""></outline>
+		<outline text="function statsChanged () {">
+			<outline text="flStatsChanged = true;"></outline>
+			<outline text="}"></outline>
+			</outline>
 		<outline text="function getDirectory (folder, callback) {">
 			<outline text="if (!utils.endsWith (folder, &quot;/&quot;)) {">
 				<outline text="folder += &quot;/&quot;;"></outline>
@@ -117,6 +125,22 @@
 			<outline text="davegithub.uploadFile (options, function (err, response, body) {">
 				<outline isComment="true" text="console.log (&quot;uploadToGithub: options == &quot; + utils.jsonStringify (options));"></outline>
 				<outline text="console.log (&quot;uploadToGithub: path == &quot; + path + &quot;, status == &quot; + response.statusCode);"></outline>
+				<outline text="//stats">
+					<outline text="var now = new Date ();"></outline>
+					<outline text="stats.ctUploads++;"></outline>
+					<outline text="stats.whenLastUpload = now;"></outline>
+					<outline text="if (err) {">
+						<outline text="stats.ctUploadErrors++;"></outline>
+						<outline text="stats.ctConsecutiveUploadErrors++;"></outline>
+						<outline text="stats.whenLastUploadError = now;"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="else {">
+						<outline text="stats.ctConsecutiveUploadErrors = 0;"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="statsChanged ();"></outline>
+					</outline>
 				<outline text="if (callback !== undefined) {">
 					<outline text="callback ();"></outline>
 					<outline text="}"></outline>
@@ -230,9 +254,7 @@
 			</outline>
 		<outline text="function setWhenLastUpdate () {">
 			<outline text="stats.whenLastUpdate = new Date ();"></outline>
-			<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
-				<outline text="});"></outline>
-				</outline>
+			<outline text="statsChanged ();"></outline>
 			<outline text="}"></outline>
 			</outline>
 		<outline text="function doUploads (callback) {">
@@ -270,30 +292,48 @@
 			<outline text="var now = new Date ();"></outline>
 			<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;: &quot; + now.toLocaleTimeString ());"></outline>
 			<outline text="checkForUpload ();"></outline>
-			<outline text="}"></outline>
-			</outline>
-		<outline text=""></outline>
-		<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;.&quot;);"></outline>
-		<outline text="fs.readFile (fnameConfig, function (err, data) {">
-			<outline text="if (err) {">
-				<outline text="console.log (&quot;uploadToGithub: err.message == &quot; + err.message);"></outline>
-				<outline text="}"></outline>
-				</outline>
-			<outline text="else {">
-				<outline text="const jstruct = JSON.parse (data);"></outline>
-				<outline text="for (var x in jstruct) {">
-					<outline text="config [x] = jstruct [x];"></outline>
-					<outline text="}"></outline>
-					</outline>
-				<outline text="doUploads (function () { //do an upload at startup">
-					<outline text="utils.runAtTopOfMinute (function () {">
-						<outline text="setInterval (everyMinute, 60000); "></outline>
-						<outline text="everyMinute ();"></outline>
-						<outline text="});"></outline>
-						</outline>
+			<outline text="if (flStatsChanged) {">
+				<outline text="flStatsChanged = false;"></outline>
+				<outline text="fs.writeFile (fnameStats, utils.jsonStringify (stats), function (err) {">
 					<outline text="});"></outline>
 					</outline>
 				<outline text="}"></outline>
+				</outline>
+			<outline text="}"></outline>
+			</outline>
+		<outline text=""></outline>
+		<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;.\n&quot;);"></outline>
+		<outline text="fs.readFile (fnameStats, function (err, data) {">
+			<outline text="if (!err) {">
+				<outline text="const jstruct = JSON.parse (data);"></outline>
+				<outline text="for (var x in jstruct) {">
+					<outline text="stats [x] = jstruct [x];"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="fs.readFile (fnameConfig, function (err, data) {">
+				<outline text="if (err) {">
+					<outline text="console.log (&quot;uploadToGithub: err.message == &quot; + err.message);"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="else {">
+					<outline text="const jstruct = JSON.parse (data);"></outline>
+					<outline text="for (var x in jstruct) {">
+						<outline text="config [x] = jstruct [x];"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="doUploads (function () { //do an upload at startup">
+						<outline text="utils.runAtTopOfMinute (function () {">
+							<outline text="setInterval (everyMinute, 60000); "></outline>
+							<outline text="everyMinute ();"></outline>
+							<outline text="});"></outline>
+							</outline>
+						<outline text="});"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="});"></outline>
 				</outline>
 			<outline text="});"></outline>
 			</outline>
