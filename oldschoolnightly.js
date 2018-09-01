@@ -1,4 +1,4 @@
-const myProductName = "Old School Nightly", myVersion = "0.5.6";
+const myProductName = "Old School Nightly", myVersion = "0.5.7";
 
 
 const fs = require ("fs");
@@ -21,6 +21,11 @@ var config = {
 		{
 			url: "http://electricserver.scripting.com/users/davewiner/electric/glossary.opml",
 			path: "blog/misc/glossary.opml",
+			type: "text/xml"
+			},
+		{
+			url: "http://radio3.io/users/davewiner/rss.xml",
+			path: "blog/misc/linkblog.xml",
 			type: "text/xml"
 			},
 		{

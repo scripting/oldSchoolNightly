@@ -11,7 +11,7 @@
 		<windowRight>1500</windowRight>
 		</head>
 	<body text="oldschoolnightly.js">
-		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.6&quot;;"></outline>
+		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.7&quot;;"></outline>
 		<outline text=""></outline>
 		<outline isComment="true" text="Notes">
 			<outline text="8/22/18; 4:16:55 PM by DW">
@@ -48,6 +48,12 @@
 				<outline text="{">
 					<outline text="url: &quot;http://electricserver.scripting.com/users/davewiner/electric/glossary.opml&quot;,"></outline>
 					<outline text="path: &quot;blog/misc/glossary.opml&quot;,"></outline>
+					<outline text="type: &quot;text/xml&quot;"></outline>
+					<outline text="},"></outline>
+					</outline>
+				<outline text="{">
+					<outline text="url: &quot;http://radio3.io/users/davewiner/rss.xml&quot;,"></outline>
+					<outline text="path: &quot;blog/misc/linkblog.xml&quot;,"></outline>
 					<outline text="type: &quot;text/xml&quot;"></outline>
 					<outline text="},"></outline>
 					</outline>
