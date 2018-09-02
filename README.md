@@ -16,3 +16,7 @@ We now upload the <a href="https://github.com/scripting/Scripting-News/blob/mast
 
 Also upload the <a href="https://github.com/scripting/Scripting-News/blob/master/blog/rss.xml">RSS feed</a> for the blog.  
 
+### Pointers
+
+A new <a href="http://this.how/scriptingNews/nightlyArchive.opml">FAQ</a> explains how this works, and provides a rationale for using GitHub as a second place to archive a blog. 
+
