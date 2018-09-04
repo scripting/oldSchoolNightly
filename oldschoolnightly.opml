@@ -11,7 +11,7 @@
 		<windowRight>1500</windowRight>
 		</head>
 	<body text="oldschoolnightly.js">
-		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.7&quot;;"></outline>
+		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.15&quot;; "></outline>
 		<outline text=""></outline>
 		<outline isComment="true" text="Notes">
 			<outline text="8/22/18; 4:16:55 PM by DW">
@@ -28,6 +28,7 @@
 		<outline text="const utils = require (&quot;daveutils&quot;);"></outline>
 		<outline text="const request = require (&quot;request&quot;); "></outline>
 		<outline text="const davegithub = require (&quot;davegithub&quot;); "></outline>
+		<outline text="const opmlToJs = require (&quot;opmltojs&quot;);"></outline>
 		<outline text=""></outline>
 		<outline text="var config = {">
 			<outline text="username: &quot;scripting&quot;,"></outline>
@@ -61,6 +62,12 @@
 					<outline text="url: &quot;http://podcatch.com/users/davewiner/podcasts.opml&quot;,"></outline>
 					<outline text="path: &quot;podcatch/subscriptions.opml&quot;,"></outline>
 					<outline text="type: &quot;text/xml&quot;"></outline>
+					<outline text="},"></outline>
+					</outline>
+				<outline text="{">
+					<outline text="url: &quot;http://electricserver.scripting.com/users/davewiner/electric/nightlyArchive.opml&quot;,"></outline>
+					<outline text="path: &quot;blog/readme.md&quot;,"></outline>
+					<outline text="type: &quot;text/md&quot;"></outline>
 					<outline text="}"></outline>
 					</outline>
 				<outline text="],"></outline>
@@ -71,7 +78,9 @@
 				<outline text="},"></outline>
 				</outline>
 			<outline text="message: &quot;Nightly update&quot;,"></outline>
-			<outline text="userAgent: &quot;Dave's OldSchool GitHub Uploader&quot;"></outline>
+			<outline text="userAgent: &quot;Dave's OldSchool GitHub Uploader&quot;,"></outline>
+			<outline text="titleHeaderMarkdown: &quot;## &quot;,"></outline>
+			<outline text="topLevelHeaderMarkdown: &quot;#### &quot;"></outline>
 			<outline text="};"></outline>
 			</outline>
 		<outline text="var stats = {">
@@ -87,6 +96,52 @@
 		<outline text="const fnameStats = &quot;stats.json&quot;, fnameConfig = &quot;config.json&quot;;"></outline>
 		<outline text="var flStatsChanged = false;"></outline>
 		<outline text=""></outline>
+		<outline isComment="true" text="function runEveryMinute (callback) { //9/4/18 by DW">
+			<outline text="utils.runAtTopOfMinute (function () {">
+				<outline text="setInterval (callback, 60000); "></outline>
+				<outline text="callback ();"></outline>
+				<outline text="});"></outline>
+				</outline>
+			<outline text="}"></outline>
+			</outline>
+		<outline text="function opmlToMarkdown (opmltext, options, callback) { //9/4/18 by DW">
+			<outline text="var mdtext = &quot;&quot;, indentlevel = 0;"></outline>
+			<outline text="function add (s) {">
+				<outline text="mdtext += utils.filledString (&quot;\t&quot;, indentlevel) + s + &quot;\n\n&quot;;"></outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="function addSubs (head) {">
+				<outline text="for (var i = 0; i &lt; head.subs.length; i++) {">
+					<outline text="var sub = head.subs [i];"></outline>
+					<outline text="add (sub.text);"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="}"></outline>
+				</outline>
+			<outline text="opmlToJs.parse (opmltext, function (theOutline) {">
+				<outline text="if (theOutline === undefined) {">
+					<outline text="console.log (&quot;There was an error parsing the OPML text.&quot;);"></outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="else {">
+					<outline text="add (config.titleHeaderMarkdown + theOutline.opml.head.title);"></outline>
+					<outline text="for (var i = 0; i &lt; theOutline.opml.body.subs.length; i++) {">
+						<outline text="var topHead = theOutline.opml.body.subs [i];"></outline>
+						<outline text="add (config.topLevelHeaderMarkdown + topHead.text);"></outline>
+						<outline text="addSubs (topHead);"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline isComment="true" text="fs.writeFile (&quot;lastopml.json&quot;, utils.jsonStringify (theOutline));"></outline>
+					<outline text="if (callback !== undefined) {">
+						<outline text="callback (mdtext);"></outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="}"></outline>
+					</outline>
+				<outline text="});"></outline>
+				</outline>
+			<outline text="}"></outline>
+			</outline>
 		<outline text="function statsChanged () {">
 			<outline text="flStatsChanged = true;"></outline>
 			<outline text="}"></outline>
@@ -175,8 +230,18 @@
 					<outline text="}"></outline>
 					</outline>
 				<outline text="else {">
-					<outline isComment="true" text="console.log (&quot;uploadFromUrl: body.length == &quot; + body.toString ().length);"></outline>
-					<outline text="uploadToGithub (path, body.toString (), type, callback);"></outline>
+					<outline text="var filetext = body.toString ();"></outline>
+					<outline text="if (type == &quot;text/md&quot;) { //9/4/18 by DW">
+						<outline text="opmlToMarkdown (filetext, config, function (mdtext) {">
+							<outline text="uploadToGithub (path, mdtext, type, callback);"></outline>
+							<outline text="});"></outline>
+							</outline>
+						<outline text="}"></outline>
+						</outline>
+					<outline text="else {">
+						<outline text="uploadToGithub (path, filetext, type, callback);"></outline>
+						<outline text="}"></outline>
+						</outline>
 					<outline text="}"></outline>
 					</outline>
 				<outline text="});"></outline>
@@ -320,7 +385,7 @@
 				</outline>
 			<outline text="fs.readFile (fnameConfig, function (err, data) {">
 				<outline text="if (err) {">
-					<outline text="console.log (&quot;uploadToGithub: err.message == &quot; + err.message);"></outline>
+					<outline text="console.log (myProductName + &quot;: err.message == &quot; + err.message);"></outline>
 					<outline text="}"></outline>
 					</outline>
 				<outline text="else {">
@@ -330,7 +395,8 @@
 						<outline text="}"></outline>
 						</outline>
 					<outline text="doUploads (function () { //do an upload at startup">
-						<outline text="utils.runAtTopOfMinute (function () {">
+						<outline text="utils.runEveryMinute (everyMinute);"></outline>
+						<outline isComment="true" text="utils.runAtTopOfMinute (function () {">
 							<outline text="setInterval (everyMinute, 60000); "></outline>
 							<outline text="everyMinute ();"></outline>
 							<outline text="});"></outline>

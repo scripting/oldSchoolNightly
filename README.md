@@ -4,6 +4,10 @@ A script that runs on the same machine as my CMS, that uploads JSON, OPML, RSS a
 
 ### Updates
 
+#### 0.5.15 9/4/18 by DW
+
+We now upload the <a href="https://github.com/scripting/Scripting-News/blob/master/blog/readme.md">readme.md</a> file for the blog folder. This is interesting because it's converting an OPML file to Markdown to do it. That functionality is built into the nightly scrip.
+
 #### 0.5.7 9/1/18 by DW
 
 We now upload the <a href="https://github.com/scripting/Scripting-News/blob/master/blog/misc/linkblog.xml">linkblog RSS</a>. 

@@ -1,10 +1,11 @@
-const myProductName = "Old School Nightly", myVersion = "0.5.7";
+const myProductName = "Old School Nightly", myVersion = "0.5.15"; 
 
 
 const fs = require ("fs");
 const utils = require ("daveutils");
 const request = require ("request"); 
 const davegithub = require ("davegithub"); 
+const opmlToJs = require ("opmltojs");
 
 var config = {
 	username: "scripting",
@@ -32,6 +33,11 @@ var config = {
 			url: "http://podcatch.com/users/davewiner/podcasts.opml",
 			path: "podcatch/subscriptions.opml",
 			type: "text/xml"
+			},
+		{
+			url: "http://electricserver.scripting.com/users/davewiner/electric/nightlyArchive.opml",
+			path: "blog/readme.md",
+			type: "text/md"
 			}
 		],
 	committer: {
@@ -39,7 +45,9 @@ var config = {
 		email: "dave.winer@gmail.com"
 		},
 	message: "Nightly update",
-	userAgent: "Dave's OldSchool GitHub Uploader"
+	userAgent: "Dave's OldSchool GitHub Uploader",
+	titleHeaderMarkdown: "## ",
+	topLevelHeaderMarkdown: "#### "
 	};
 var stats = {
 	whenLastUpdate: new Date (0),
@@ -53,6 +61,34 @@ var stats = {
 const fnameStats = "stats.json", fnameConfig = "config.json";
 var flStatsChanged = false;
 
+function opmlToMarkdown (opmltext, options, callback) { //9/4/18 by DW
+	var mdtext = "", indentlevel = 0;
+	function add (s) {
+		mdtext += utils.filledString ("\t", indentlevel) + s + "\n\n";
+		}
+	function addSubs (head) {
+		for (var i = 0; i < head.subs.length; i++) {
+			var sub = head.subs [i];
+			add (sub.text);
+			}
+		}
+	opmlToJs.parse (opmltext, function (theOutline) {
+		if (theOutline === undefined) {
+			console.log ("There was an error parsing the OPML text.");
+			}
+		else {
+			add (config.titleHeaderMarkdown + theOutline.opml.head.title);
+			for (var i = 0; i < theOutline.opml.body.subs.length; i++) {
+				var topHead = theOutline.opml.body.subs [i];
+				add (config.topLevelHeaderMarkdown + topHead.text);
+				addSubs (topHead);
+				}
+			if (callback !== undefined) {
+				callback (mdtext);
+				}
+			}
+		});
+	}
 function statsChanged () {
 	flStatsChanged = true;
 	}
@@ -121,7 +157,15 @@ function uploadFromUrl (path, url, type, callback) {
 				}
 			}
 		else {
-			uploadToGithub (path, body.toString (), type, callback);
+			var filetext = body.toString ();
+			if (type == "text/md") { //9/4/18 by DW
+				opmlToMarkdown (filetext, config, function (mdtext) {
+					uploadToGithub (path, mdtext, type, callback);
+					});
+				}
+			else {
+				uploadToGithub (path, filetext, type, callback);
+				}
 			}
 		});
 	}
@@ -226,7 +270,7 @@ fs.readFile (fnameStats, function (err, data) {
 		}
 	fs.readFile (fnameConfig, function (err, data) {
 		if (err) {
-			console.log ("uploadToGithub: err.message == " + err.message);
+			console.log (myProductName + ": err.message == " + err.message);
 			}
 		else {
 			const jstruct = JSON.parse (data);
@@ -234,10 +278,7 @@ fs.readFile (fnameStats, function (err, data) {
 				config [x] = jstruct [x];
 				}
 			doUploads (function () { //do an upload at startup
-				utils.runAtTopOfMinute (function () {
-					setInterval (everyMinute, 60000); 
-					everyMinute ();
-					});
+				utils.runEveryMinute (everyMinute);
 				});
 			}
 		});
