@@ -1,4 +1,4 @@
-const myProductName = "Old School Nightly", myVersion = "0.5.15"; 
+const myProductName = "Old School Nightly", myVersion = "0.5.16"; 
 
 
 const fs = require ("fs");
@@ -251,7 +251,9 @@ function checkForUpload () {
 	}
 function everyMinute () {
 	var now = new Date ();
-	console.log ("\n" + myProductName + " v" + myVersion + ": " + now.toLocaleTimeString ());
+	if (now.getMinutes () == 0) {
+		console.log ("\n" + myProductName + " v" + myVersion + ": " + now.toLocaleTimeString ());
+		}
 	checkForUpload ();
 	if (flStatsChanged) {
 		flStatsChanged = false;

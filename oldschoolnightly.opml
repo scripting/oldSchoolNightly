@@ -11,7 +11,7 @@
 		<windowRight>1500</windowRight>
 		</head>
 	<body text="oldschoolnightly.js">
-		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.15&quot;; "></outline>
+		<outline text="const myProductName = &quot;Old School Nightly&quot;, myVersion = &quot;0.5.16&quot;; "></outline>
 		<outline text=""></outline>
 		<outline isComment="true" text="Notes">
 			<outline text="8/22/18; 4:16:55 PM by DW">
@@ -361,7 +361,10 @@
 			</outline>
 		<outline text="function everyMinute () {">
 			<outline text="var now = new Date ();"></outline>
-			<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;: &quot; + now.toLocaleTimeString ());"></outline>
+			<outline text="if (now.getMinutes () == 0) {">
+				<outline text="console.log (&quot;\n&quot; + myProductName + &quot; v&quot; + myVersion + &quot;: &quot; + now.toLocaleTimeString ());"></outline>
+				<outline text="}"></outline>
+				</outline>
 			<outline text="checkForUpload ();"></outline>
 			<outline text="if (flStatsChanged) {">
 				<outline text="flStatsChanged = false;"></outline>

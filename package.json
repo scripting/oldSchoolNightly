@@ -1,6 +1,6 @@
 {
 	"name": "oldSchoolNightly",
-	"version": "0.5.15",
+	"version": "0.5.16",
 	"main": "oldschoolnightly.js",
 	"dependencies" : {
 		"request": "*",
